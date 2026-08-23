@@ -1,7 +1,7 @@
 export default {
   translation: {
     Consoles: 'Consoles',
-    Xcloud: 'Jogos na nuvem',
+    Xcloud: 'xCloud',
     Host: 'Console',
     Settings: 'Configurações',
     Login: 'Entrar',
@@ -206,7 +206,7 @@ export default {
     GamepadSettings: 'Controle e vibração',
     vGamepadSettings: 'Controle virtual',
     AudioSettings: 'Áudio',
-    XcloudSettings: 'Jogos na nuvem',
+    XcloudSettings: 'xCloud',
     XchomeSettings: 'Streaming do console',
     SensorSettings: 'Sensor',
     TurnServerSettings: 'Servidor intermediário',
