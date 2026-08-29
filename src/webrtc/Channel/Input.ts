@@ -132,10 +132,12 @@ export default class InputChannel extends BaseChannel {
   }
 
   onMessage(event: any) {
-    console.log(
-      'Channel/Input.ts - [' + this._channelName + '] onMessage:',
-      event,
-    );
+    if (__DEV__) {
+      console.log(
+        'Channel/Input.ts - [' + this._channelName + '] onMessage:',
+        event,
+      );
+    }
 
     const dataView = new DataView(event.data);
 
@@ -189,10 +191,12 @@ export default class InputChannel extends BaseChannel {
     clearInterval(this._inputInterval);
 
     super.onClose(event);
-    console.log(
-      'Channel/Input.ts - [' + this._channelName + '] onClose:',
-      event,
-    );
+    if (__DEV__) {
+      console.log(
+        'Channel/Input.ts - [' + this._channelName + '] onClose:',
+        event,
+      );
+    }
   }
 
   getGamepadQueue(size = 30) {
