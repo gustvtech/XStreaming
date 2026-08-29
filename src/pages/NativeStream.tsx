@@ -1787,6 +1787,9 @@ export function NativeStreamScreenBase({
       FullScreenManager.immersiveModeOff();
       stopVibrate();
       webrtcClient && webrtcClient.close();
+      remoteStream.current?.getTracks?.().forEach(track => track.stop?.());
+      remoteStream.current = null;
+      performanceRequestInFlight.current = false;
       usbGpEventListener.current && usbGpEventListener.current.remove();
       gpDownEventListener.current && gpDownEventListener.current.remove();
       gpUpEventListener.current && gpUpEventListener.current.remove();
