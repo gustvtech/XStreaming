@@ -63,6 +63,9 @@ public class RTCFsrVideoView extends ViewGroup {
     private boolean fsrEnabled = true;
     private float fsrSharpness = 2f;
     private boolean fsrInitialized;
+    private float appliedFsrSharpness = Float.NaN;
+    private int appliedSurfaceWidth = -1;
+    private int appliedSurfaceHeight = -1;
     private Object fsrDrawerProxy;
     private Object fallbackDrawer;
 
@@ -494,6 +497,7 @@ public class RTCFsrVideoView extends ViewGroup {
 
     public void setFsrSharpness(float sharpness) {
         fsrSharpness = sharpness;
+        appliedFsrSharpness = Float.NaN;
         fsrVideoProcessor.setSharpness(sharpness / 10f);
     }
 
@@ -652,11 +656,18 @@ public class RTCFsrVideoView extends ViewGroup {
                 }
 
                 ensureFsrInitialized();
-                fsrVideoProcessor.setSharpness(fsrSharpness / 10f);
-                if (viewportWidth > 0 && viewportHeight > 0) {
-                    fsrVideoProcessor.setSurfaceSize(viewportWidth, viewportHeight);
-                } else if (frameWidth > 0 && frameHeight > 0) {
-                    fsrVideoProcessor.setSurfaceSize(frameWidth, frameHeight);
+                float requestedSharpness = fsrSharpness / 10f;
+                if (Float.compare(appliedFsrSharpness, requestedSharpness) != 0) {
+                    fsrVideoProcessor.setSharpness(requestedSharpness);
+                    appliedFsrSharpness = requestedSharpness;
+                }
+                int surfaceWidth = viewportWidth > 0 ? viewportWidth : frameWidth;
+                int surfaceHeight = viewportHeight > 0 ? viewportHeight : frameHeight;
+                if (surfaceWidth > 0 && surfaceHeight > 0
+                        && (surfaceWidth != appliedSurfaceWidth || surfaceHeight != appliedSurfaceHeight)) {
+                    fsrVideoProcessor.setSurfaceSize(surfaceWidth, surfaceHeight);
+                    appliedSurfaceWidth = surfaceWidth;
+                    appliedSurfaceHeight = surfaceHeight;
                 }
 
                 boolean rendered = fsrVideoProcessor.draw(
@@ -772,9 +783,12 @@ public class RTCFsrVideoView extends ViewGroup {
                 Log.w(TAG, "Failed to release FSR processor", t);
             }
             fsrInitialized = false;
+            appliedFsrSharpness = Float.NaN;
+            appliedSurfaceWidth = -1;
+            appliedSurfaceHeight = -1;
         }
-
         if (fallbackDrawer != null) {
+
             try {
                 Method release = findByNameAndArgCount(fallbackDrawer.getClass(), "release", 0);
                 if (release != null) {
