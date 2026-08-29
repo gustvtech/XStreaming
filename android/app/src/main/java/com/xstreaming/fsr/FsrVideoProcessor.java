@@ -66,6 +66,9 @@ public class FsrVideoProcessor implements VideoProcessor {
     private int outputWidth = -1;
     private int outputHeight = -1;
     private float[] outputSize = new float[2];
+    private final float[] inputTextureSize = new float[2];
+    private int inputTextureWidth = -1;
+    private int inputTextureHeight = -1;
 
     public FsrVideoProcessor(Context context) {
         this.context = context.getApplicationContext();
@@ -330,17 +333,18 @@ public class FsrVideoProcessor implements VideoProcessor {
             }
         }
 
-        float[] inputTextureSize = null;
-        if (needInputSize) {
-            inputTextureSize = (frameWidth > 0 && frameHeight > 0)
-                    ? new float[]{frameWidth, frameHeight}
-                    : new float[]{0f, 0f};
+        if (needInputSize
+                && (frameWidth != inputTextureWidth || frameHeight != inputTextureHeight)) {
+            inputTextureSize[0] = frameWidth > 0 ? frameWidth : 0f;
+            inputTextureSize[1] = frameHeight > 0 ? frameHeight : 0f;
+            inputTextureWidth = frameWidth;
+            inputTextureHeight = frameHeight;
         }
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffers[0]);
         try {
             easu.setSamplerTexIdUniform("inputTexture", frameTexture, 0);
-            if (inputTextureSize != null) {
+            if (needInputSize) {
                 easu.setFloatsUniform("inputTextureSize", inputTextureSize);
             }
             easu.setFloatsUniform("outputTextureSize", outputSize);
@@ -408,16 +412,17 @@ public class FsrVideoProcessor implements VideoProcessor {
             return drawPassthrough(frameTexture, transformMatrix);
         }
 
-        float[] inputTextureSize = null;
-        if (needInputSize) {
-            inputTextureSize = (frameWidth > 0 && frameHeight > 0)
-                    ? new float[]{frameWidth, frameHeight}
-                    : new float[]{0f, 0f};
+        if (needInputSize
+                && (frameWidth != inputTextureWidth || frameHeight != inputTextureHeight)) {
+            inputTextureSize[0] = frameWidth > 0 ? frameWidth : 0f;
+            inputTextureSize[1] = frameHeight > 0 ? frameHeight : 0f;
+            inputTextureWidth = frameWidth;
+            inputTextureHeight = frameHeight;
         }
 
         try {
             program.setSamplerTexIdUniform("inputTexture", frameTexture, 0);
-            if (inputTextureSize != null) {
+            if (needInputSize) {
                 program.setFloatsUniform("inputTextureSize", inputTextureSize);
             }
             program.setFloatsUniform("outputTextureSize", outputSize);
