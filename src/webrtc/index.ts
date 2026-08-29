@@ -297,6 +297,11 @@ class webRTCClient {
     return this._iceCandidates;
   }
 
+  clearIceCandidates() {
+    this._iceCandidates.length = 0;
+    this._webrtcStates.iceCandidates = [];
+  }
+
   setIceCandidates(iceDetails: any) {
     for (const candidate in iceDetails) {
       if (iceDetails[candidate].candidate === 'a=end-of-candidates') {

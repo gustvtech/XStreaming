@@ -1700,6 +1700,7 @@ export function NativeStreamScreenBase({
                         JSON.stringify(iceDetails),
                       );
                       webrtcClient.setIceCandidates(iceDetails);
+                      webrtcClient.clearIceCandidates?.();
                       setLoadingText(`${t('Exchange ICE successfully...')}`);
                     })
                     .catch(e => {
