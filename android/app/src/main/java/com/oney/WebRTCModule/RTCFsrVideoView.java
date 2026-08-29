@@ -53,6 +53,7 @@ public class RTCFsrVideoView extends ViewGroup {
     private int frameWidth;
     private boolean mirror;
     private boolean rendererAttached;
+    private boolean rendererCleanupInProgress;
     private ScalingType scalingType;
     private int videoFormatMode = VIDEO_FORMAT_MODE_AUTO;
     private float videoFormatAspectRatio;
@@ -241,29 +242,40 @@ public class RTCFsrVideoView extends ViewGroup {
     }
 
     private void removeRendererFromVideoTrack() {
-        if (rendererAttached) {
-            if (videoTrack != null) {
-                ThreadUtils.runOnExecutor(() -> {
-                    try {
-                        videoTrack.removeSink(surfaceViewRenderer);
-                    } catch (Throwable ignored) {
-                        // Ignore track lifecycle race.
+        if (!rendererAttached || rendererCleanupInProgress) {
+            return;
+        }
+
+        rendererAttached = false;
+        rendererCleanupInProgress = true;
+        VideoTrack track = videoTrack;
+        ThreadUtils.runOnExecutor(() -> {
+            try {
+                if (track != null) {
+                    track.removeSink(surfaceViewRenderer);
+                }
+            } catch (Throwable ignored) {
+                // Ignore track lifecycle race.
+            } finally {
+                surfaceViewRenderer.release();
+                releaseDrawerResources();
+                if (surfaceViewRendererInstances > 0) {
+                    surfaceViewRendererInstances--;
+                }
+                post(() -> {
+                    rendererCleanupInProgress = false;
+                    synchronized (layoutSyncRoot) {
+                        frameHeight = 0;
+                        frameRotation = 0;
+                        frameWidth = 0;
+                    }
+                    requestSurfaceViewRendererLayout();
+                    if (videoTrack != null && ViewCompat.isAttachedToWindow(this)) {
+                        tryAddRendererToVideoTrack();
                     }
                 });
             }
-
-            surfaceViewRenderer.release();
-            releaseDrawerResources();
-            surfaceViewRendererInstances--;
-            rendererAttached = false;
-
-            synchronized (layoutSyncRoot) {
-                frameHeight = 0;
-                frameRotation = 0;
-                frameWidth = 0;
-            }
-            requestSurfaceViewRendererLayout();
-        }
+        });
     }
 
     @SuppressLint("WrongCall")
@@ -529,7 +541,8 @@ public class RTCFsrVideoView extends ViewGroup {
     }
 
     private void tryAddRendererToVideoTrack() {
-        if (!rendererAttached && videoTrack != null && ViewCompat.isAttachedToWindow(this)) {
+        if (!rendererAttached && !rendererCleanupInProgress
+                && videoTrack != null && ViewCompat.isAttachedToWindow(this)) {
             EglBase.Context sharedContext = EglUtils.getRootEglBaseContext();
 
             if (sharedContext == null) {
