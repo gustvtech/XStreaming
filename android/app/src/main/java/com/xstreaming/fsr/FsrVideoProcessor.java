@@ -94,9 +94,6 @@ public class FsrVideoProcessor implements VideoProcessor {
             Log.w(TAG, "GLES3 context without GL_OES_EGL_image_external_essl3, force FSR 2.0 shaders");
         }
 
-        Log.i(TAG, "FSR preferred shader dir: " + preferredDir);
-        Log.i(TAG, "OpenGL extensions: " + extensions);
-
         boolean skipTwoPassForDriverStability = !ENABLE_TWO_PASS_PIPELINE;
         if (skipTwoPassForDriverStability) {
             Log.w(TAG, "Skip two-pass FSR globally, use mobile pipeline for stability");
@@ -149,7 +146,6 @@ public class FsrVideoProcessor implements VideoProcessor {
         if (outputWidth == width && outputHeight == height) {
             return;
         }
-        Log.i(TAG, "setSurfaceSize(" + width + "," + height + ")");
         outputWidth = width;
         outputHeight = height;
         outputSize = new float[]{width, height};
@@ -190,12 +186,6 @@ public class FsrVideoProcessor implements VideoProcessor {
 
     public void setHdrToneMappingEnabled(boolean enabled) {
         hdrInputEnabled = enabled;
-        if (enabled && !FORCE_SOFTWARE_HDR_TONE_MAP) {
-            Log.i(
-                    TAG,
-                    "HDR stream detected; software HDR tone-map disabled."
-            );
-        }
     }
 
     public void setSharpness(float value) {
@@ -203,13 +193,6 @@ public class FsrVideoProcessor implements VideoProcessor {
         mobileSharpness = clamped;
         // Map [0..2] (stronger as larger) to RCAS stop domain [2..0].
         rcasSharpness = 2f - clamped;
-        Log.i(
-                TAG,
-                "Sharpness request=" + value + ", clamped=" + clamped
-                        + ", mobileApplied=" + mobileSharpness
-                        + ", rcasApplied=" + rcasSharpness
-        );
-        logEffectiveSharpness("setSharpness");
     }
 
     public void resetSharpness() {
