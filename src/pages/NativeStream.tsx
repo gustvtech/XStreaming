@@ -1394,7 +1394,7 @@ export function NativeStreamScreenBase({
                   );
                 }
               });
-            }, 16);
+            }, 50);
           }
         } else if (state === CLOSED) {
           if (isRequestExit.current) {
@@ -1889,7 +1889,8 @@ export function NativeStreamScreenBase({
     };
 
     updatePerformance();
-    performanceInterval.current = setInterval(updatePerformance, 1000);
+    // A telemetria é auxiliar; 2 Hz reduz o trabalho no thread JS durante o jogo.
+    performanceInterval.current = setInterval(updatePerformance, 2000);
 
     return () => {
       if (performanceInterval.current) {
