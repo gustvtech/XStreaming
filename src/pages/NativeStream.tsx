@@ -2617,11 +2617,13 @@ export function NativeStreamScreenBase({
           streamURL={remote}
           videoFormat={video_format || ''}
         />
-        <NativeTouchOverlay
-          enabled={!!settings.native_touch && !isInPictureInPicture}
-          videoFormat={video_format || ''}
-          onPointerInput={handleNativePointerInput}
-        />
+        {settings.native_touch && !isInPictureInPicture ? (
+          <NativeTouchOverlay
+            enabled
+            videoFormat={video_format || ''}
+            onPointerInput={handleNativePointerInput}
+          />
+        ) : null}
       </View>
     );
   };
