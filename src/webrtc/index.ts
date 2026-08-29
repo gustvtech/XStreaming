@@ -116,7 +116,7 @@ class webRTCClient {
   _audioLevel = 0;
   _audioEnergySnapshot: AudioEnergySnapshot | null = null;
   _hasAudioLevelSample = false;
-  // Compartilha getStats() entre os timers de áudio e vídeo.
+  // Share getStats() between the audio and video timers.
   _statsCache: any = null;
   _statsCacheAt = 0;
   _statsRequest: Promise<any> | null = null;

@@ -1889,7 +1889,7 @@ export function NativeStreamScreenBase({
     };
 
     updatePerformance();
-    // A telemetria é auxiliar; 2 Hz reduz o trabalho no thread JS durante o jogo.
+    // Telemetry is auxiliary; 2 Hz reduces JS-thread work during gameplay.
     performanceInterval.current = setInterval(updatePerformance, 2000);
 
     return () => {
