@@ -2569,6 +2569,7 @@ export function NativeStreamScreenBase({
             streamURL={remote}
             videoFormat={video_format || ''}
             fsrEnabled={true}
+            autoDisableFsrOnLowMemory={true}
             fsrSharpness={fsrSharpness}
           />
           <NativeTouchOverlay

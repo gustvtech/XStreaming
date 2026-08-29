@@ -1,6 +1,7 @@
 package com.oney.WebRTCModule;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -61,6 +62,7 @@ public class RTCFsrVideoView extends ViewGroup {
     private VideoTrack videoTrack;
 
     private boolean fsrEnabled = true;
+    private boolean autoDisableFsrOnLowMemory;
     private boolean fsrFallbackActive;
     private float fsrSharpness = 2f;
     private boolean fsrInitialized;
@@ -498,7 +500,26 @@ public class RTCFsrVideoView extends ViewGroup {
         if (enabled) {
             fsrFallbackActive = false;
         }
-        fsrVideoProcessor.setFsrEnabled(enabled);
+        applyEffectiveFsrEnabled();
+    }
+
+    public void setAutoDisableFsrOnLowMemory(boolean enabled) {
+        autoDisableFsrOnLowMemory = enabled;
+        applyEffectiveFsrEnabled();
+    }
+
+    private void applyEffectiveFsrEnabled() {
+        boolean lowMemoryDevice = false;
+        if (autoDisableFsrOnLowMemory) {
+            ActivityManager activityManager =
+                    (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+            lowMemoryDevice = activityManager != null && activityManager.isLowRamDevice();
+        }
+        boolean effectiveEnabled = fsrEnabled && !lowMemoryDevice;
+        if (effectiveEnabled) {
+            fsrFallbackActive = false;
+        }
+        fsrVideoProcessor.setFsrEnabled(effectiveEnabled);
     }
 
     public void setFsrSharpness(float sharpness) {
@@ -731,7 +752,7 @@ public class RTCFsrVideoView extends ViewGroup {
 
         String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
         fsrVideoProcessor.initialize(major, minor, extensions == null ? "" : extensions);
-        fsrVideoProcessor.setFsrEnabled(fsrEnabled);
+        applyEffectiveFsrEnabled();
         fsrVideoProcessor.setSharpness(fsrSharpness / 10f);
         fsrInitialized = true;
     }
