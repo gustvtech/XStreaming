@@ -62,6 +62,7 @@ public class FsrVideoProcessor implements VideoProcessor {
     private boolean fsrEnabled = true;
     private boolean hdrInputEnabled;
     private boolean usingPqWindow;
+    private boolean softwareHdrToneMap;
 
     private int outputWidth = -1;
     private int outputHeight = -1;
@@ -190,6 +191,7 @@ public class FsrVideoProcessor implements VideoProcessor {
 
     public void setHdrToneMappingEnabled(boolean enabled) {
         hdrInputEnabled = enabled;
+        updateSoftwareHdrToneMapState();
     }
 
     public void setSharpness(float value) {
@@ -627,18 +629,16 @@ public class FsrVideoProcessor implements VideoProcessor {
     }
 
     private boolean shouldApplySoftwareHdrToneMap() {
-        if (!hdrInputEnabled) {
-            return false;
-        }
-        if (usingPqWindow) {
-            // PQ output window should preserve HDR signal and avoid SDR tone map in this shader path.
-            return false;
-        }
-        return FORCE_SOFTWARE_HDR_TONE_MAP;
+        return softwareHdrToneMap;
+    }
+
+    private void updateSoftwareHdrToneMapState() {
+        softwareHdrToneMap = hdrInputEnabled && !usingPqWindow && FORCE_SOFTWARE_HDR_TONE_MAP;
     }
 
     private void detectHdrWindowState() {
         usingPqWindow = false;
+        updateSoftwareHdrToneMapState();
         android.opengl.EGLDisplay display = EGL14.eglGetCurrentDisplay();
         android.opengl.EGLSurface drawSurface = EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW);
         if (display == null || display == EGL14.EGL_NO_DISPLAY
@@ -659,6 +659,7 @@ public class FsrVideoProcessor implements VideoProcessor {
         if (EGL14.eglQuerySurface(display, drawSurface, EGL_GL_COLORSPACE_KHR, colorspace, 0)) {
             usingPqWindow = colorspace[0] == EGL_GL_COLORSPACE_BT2020_PQ_EXT;
         }
+        updateSoftwareHdrToneMapState();
 
         Log.i(
                 TAG,
