@@ -65,7 +65,7 @@ public class FsrVideoProcessor implements VideoProcessor {
 
     private int outputWidth = -1;
     private int outputHeight = -1;
-    private float[] outputSize = new float[2];
+    private final float[] outputSize = new float[2];
     private final float[] inputTextureSize = new float[2];
     private int inputTextureWidth = -1;
     private int inputTextureHeight = -1;
@@ -151,7 +151,8 @@ public class FsrVideoProcessor implements VideoProcessor {
         }
         outputWidth = width;
         outputHeight = height;
-        outputSize = new float[]{width, height};
+        outputSize[0] = width;
+        outputSize[1] = height;
 
         if (pipelineMode == PIPELINE_TWO_PASS) {
             deleteFramebuffer();
