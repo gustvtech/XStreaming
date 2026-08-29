@@ -69,6 +69,8 @@ public class RTCFsrVideoView extends ViewGroup {
     private int appliedSurfaceHeight = -1;
     private Object fsrDrawerProxy;
     private Object fallbackDrawer;
+    private Method fallbackDrawOesMethod;
+    private Method fallbackReleaseMethod;
 
     private final FsrVideoProcessor fsrVideoProcessor;
 
@@ -761,13 +763,21 @@ public class RTCFsrVideoView extends ViewGroup {
         if (drawer == null) {
             return;
         }
-
         try {
-            Method target = findByNameAndArgCount(drawer.getClass(), methodName, args == null ? 0 : args.length);
+            Method target;
+            if ("drawOes".equals(methodName)) {
+                if (fallbackDrawOesMethod == null) {
+                    fallbackDrawOesMethod = findByNameAndArgCount(drawer.getClass(), methodName, args == null ? 0 : args.length);
+                }
+                target = fallbackDrawOesMethod;
+            } else {
+                target = findByNameAndArgCount(drawer.getClass(), methodName, args == null ? 0 : args.length);
+            }
             if (target == null) {
                 return;
             }
             target.invoke(drawer, args == null ? new Object[0] : args);
+
         } catch (Throwable t) {
             Log.e(TAG, "Fallback drawer invocation failed: " + methodName, t);
         }
@@ -796,16 +806,20 @@ public class RTCFsrVideoView extends ViewGroup {
             appliedSurfaceHeight = -1;
         }
         if (fallbackDrawer != null) {
-
             try {
-                Method release = findByNameAndArgCount(fallbackDrawer.getClass(), "release", 0);
-                if (release != null) {
-                    release.invoke(fallbackDrawer);
+                if (fallbackReleaseMethod == null) {
+                    fallbackReleaseMethod = findByNameAndArgCount(fallbackDrawer.getClass(), "release", 0);
                 }
+                if (fallbackReleaseMethod != null) {
+                    fallbackReleaseMethod.invoke(fallbackDrawer);
+                }
+
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to release fallback drawer", t);
             }
             fallbackDrawer = null;
+            fallbackDrawOesMethod = null;
+            fallbackReleaseMethod = null;
         }
     }
 }
