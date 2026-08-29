@@ -151,21 +151,14 @@ function StreamScreen({navigation, route}) {
   const webviewRef = React.useRef(null);
 
   React.useEffect(() => {
-    let layoutTimer: any = null;
     const lockTimer = setTimeout(() => {
       Orientation.lockToLandscape();
-
-      layoutTimer = setTimeout(() => {
-        const {height: dHeight} = Dimensions.get('window');
-        setModalMaxHeight(dHeight - 50);
-      }, 100);
+      const {height: dHeight} = Dimensions.get('window');
+      setModalMaxHeight(dHeight - 50);
     }, 500);
 
     return () => {
       clearTimeout(lockTimer);
-      if (layoutTimer) {
-        clearTimeout(layoutTimer);
-      }
       Orientation.unlockAllOrientations();
     };
   }, [route.params?.sessionId, route.params?.streamType]);

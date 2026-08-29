@@ -306,22 +306,16 @@ export function NativeStreamScreenBase({
   );
 
   React.useEffect(() => {
-    let layoutTimer: any = null;
     const lockTimer = setTimeout(() => {
       if (portraitMode) {
         Orientation.lockToPortrait();
       } else {
         Orientation.lockToLandscape();
       }
-
-      layoutTimer = setTimeout(() => {}, 100);
     }, 500);
 
     return () => {
       clearTimeout(lockTimer);
-      if (layoutTimer) {
-        clearTimeout(layoutTimer);
-      }
       Orientation.unlockAllOrientations();
     };
   }, [route.params?.sessionId, route.params?.streamType, portraitMode]);
