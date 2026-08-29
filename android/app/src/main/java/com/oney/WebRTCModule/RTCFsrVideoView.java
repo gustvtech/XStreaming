@@ -61,6 +61,7 @@ public class RTCFsrVideoView extends ViewGroup {
     private VideoTrack videoTrack;
 
     private boolean fsrEnabled = true;
+    private boolean fsrFallbackActive;
     private float fsrSharpness = 2f;
     private boolean fsrInitialized;
     private float appliedFsrSharpness = Float.NaN;
@@ -492,6 +493,9 @@ public class RTCFsrVideoView extends ViewGroup {
 
     public void setFsrEnabled(boolean enabled) {
         fsrEnabled = enabled;
+        if (enabled) {
+            fsrFallbackActive = false;
+        }
         fsrVideoProcessor.setFsrEnabled(enabled);
     }
 
@@ -631,7 +635,7 @@ public class RTCFsrVideoView extends ViewGroup {
                 return;
             }
 
-            if (!fsrEnabled) {
+            if (!fsrEnabled || fsrFallbackActive) {
                 invokeFallbackDrawer("drawOes", args);
                 return;
             }
@@ -678,10 +682,13 @@ public class RTCFsrVideoView extends ViewGroup {
                         texMatrix
                 );
                 if (!rendered) {
+                    // Keep using the stable fallback after a failed FSR draw.
+                    fsrFallbackActive = true;
                     invokeFallbackDrawer("drawOes", args);
                 }
             } catch (Throwable t) {
                 Log.e(TAG, "FSR draw failed, fallback to default OES drawer.", t);
+                fsrFallbackActive = true;
                 invokeFallbackDrawer("drawOes", args);
             }
         }
@@ -783,6 +790,7 @@ public class RTCFsrVideoView extends ViewGroup {
                 Log.w(TAG, "Failed to release FSR processor", t);
             }
             fsrInitialized = false;
+            fsrFallbackActive = false;
             appliedFsrSharpness = Float.NaN;
             appliedSurfaceWidth = -1;
             appliedSurfaceHeight = -1;
