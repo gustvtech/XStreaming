@@ -55,6 +55,7 @@ const FAILED = 'failed';
 const DUALSENSE = 'DualSenseController';
 const LIVE_GAMEPAD_PROFILE = 'LiveLayout';
 const PICTURE_IN_PICTURE_MODE_CHANGED = 'pictureInPictureModeChanged';
+const isAndroidTv = Platform.OS === 'android' && Platform.isTV === true;
 
 const {
   FullScreenManager,
@@ -1087,7 +1088,7 @@ export function NativeStreamScreenBase({
     }
 
     // Sensor
-    if (_settings.sensor) {
+    if (_settings.sensor && !isAndroidTv) {
       const sensorManager =
         _settings.sensor === 2 ? GamepadSensorModule : SensorModule;
 
@@ -1331,7 +1332,7 @@ export function NativeStreamScreenBase({
           );
 
           // Alway show virtual gamepad
-          if (portraitMode || _settings.show_virtual_gamead) {
+          if (!isAndroidTv && (portraitMode || _settings.show_virtual_gamead)) {
             setShowVirtualGamepad(true);
           }
 
@@ -2257,7 +2258,7 @@ export function NativeStreamScreenBase({
       setShowVirtualGamepad(false);
       webrtcClient && webrtcClient.close();
       setShowModal(false);
-      if (settings.sensor) {
+      if (settings.sensor && !isAndroidTv) {
         SensorModule.stopSensor();
         GamepadSensorModule.stopSensor();
       }
@@ -2493,7 +2494,7 @@ export function NativeStreamScreenBase({
   }, [openOptionsModal, showModal]);
 
   const renderVirtualGamepad = () => {
-    if (portraitMode) {
+    if (portraitMode || isAndroidTv) {
       return null;
     }
     if (isInPictureInPicture || !showVirtualGamepad) {
@@ -2556,18 +2557,19 @@ export function NativeStreamScreenBase({
 
   const useFsrRenderer = !!settings.fsr;
   const fsrSharpness = settings.fsr_display_options?.sharpness ?? 2;
+  const nativeTouchEnabled = !!settings.native_touch && !isAndroidTv;
   const handleNativePointerInput = React.useCallback(
     (event: PointerWireData) => {
-      if (!webrtcClient || !settings.native_touch) {
+      if (!webrtcClient || !nativeTouchEnabled) {
         return;
       }
 
       webrtcClient.getChannelProcessor('input')?.queuePointerInput([event]);
     },
-    [settings.native_touch, webrtcClient],
+    [nativeTouchEnabled, webrtcClient],
   );
 
-  const video_format = settings.native_touch ? '' : settings.video_format;
+  const video_format = nativeTouchEnabled ? '' : settings.video_format;
   const loadingPosterUrl =
     typeof route.params?.postUrl === 'string' ? route.params.postUrl : '';
   const showLoadingPoster = loading && !!loadingPosterUrl;
@@ -2597,7 +2599,7 @@ export function NativeStreamScreenBase({
             autoDisableFsrOnLowMemory={true}
             fsrSharpness={fsrSharpness}
           />
-          {settings.native_touch && !isInPictureInPicture ? (
+          {nativeTouchEnabled && !isInPictureInPicture ? (
             <NativeTouchOverlay
               enabled
               videoFormat={video_format || ''}
@@ -2617,7 +2619,7 @@ export function NativeStreamScreenBase({
           streamURL={remote}
           videoFormat={video_format || ''}
         />
-        {settings.native_touch && !isInPictureInPicture ? (
+        {nativeTouchEnabled && !isInPictureInPicture ? (
           <NativeTouchOverlay
             enabled
             videoFormat={video_format || ''}
@@ -2629,7 +2631,7 @@ export function NativeStreamScreenBase({
   };
 
   const renderPortraitVirtualGamepad = () => {
-    if (!portraitMode || connectState !== CONNECTED) {
+    if (!portraitMode || isAndroidTv || connectState !== CONNECTED) {
       return null;
     }
 
@@ -2756,12 +2758,14 @@ export function NativeStreamScreenBase({
 
       {renderVirtualGamepad()}
 
-      <VirtualGamepadEditor
-        visible={!portraitMode && showGamepadEditor && !isInPictureInPicture}
-        profileName={editorProfile || getActiveProfileName()}
-        onSave={handleSaveGamepadLayout}
-        onCancel={() => setShowGamepadEditor(false)}
-      />
+      {!isAndroidTv ? (
+        <VirtualGamepadEditor
+          visible={!portraitMode && showGamepadEditor && !isInPictureInPicture}
+          profileName={editorProfile || getActiveProfileName()}
+          onSave={handleSaveGamepadLayout}
+          onCancel={() => setShowGamepadEditor(false)}
+        />
+      ) : null}
 
       {renderMenu()}
     </View>
