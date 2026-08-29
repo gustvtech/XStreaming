@@ -705,12 +705,14 @@ public class RTCFsrVideoView extends ViewGroup {
                         texMatrix
                 );
                 if (!rendered) {
-                    // Keep using the stable fallback after a failed FSR draw.
+                    // Release FSR resources and keep using the stable fallback after a failed draw.
+                    releaseDrawerResources();
                     fsrFallbackActive = true;
                     invokeFallbackDrawer("drawOes", args);
                 }
             } catch (Throwable t) {
                 Log.e(TAG, "FSR draw failed, fallback to default OES drawer.", t);
+                releaseDrawerResources();
                 fsrFallbackActive = true;
                 invokeFallbackDrawer("drawOes", args);
             }
