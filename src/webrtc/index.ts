@@ -83,6 +83,7 @@ class webRTCClient {
 
   _webrtcDataChannels: any = {};
   _webrtcChannelProcessors: any = {};
+  _baseIceServerCount = this._webrtcConfiguration.iceServers.length;
 
   _isResetting = false;
   _gamepad_deadzone = 0.2;
@@ -132,9 +133,16 @@ class webRTCClient {
   }
 
   init() {
+    this._isResetting = false;
     const settings = getSettings();
     this._resetAudioLevelTracking();
     this._resetVideoTrackState();
+    this._iceCandidates.length = 0;
+    this._webrtcStates.iceCandidates = [];
+    this._webrtcConfiguration.iceServers = this._webrtcConfiguration.iceServers.slice(
+      0,
+      this._baseIceServerCount,
+    );
 
     // Use custom STUN/TURN server
     if (
@@ -320,6 +328,15 @@ class webRTCClient {
       globalThis._lastStat = null;
       this._webrtcClient = undefined;
       this._resetVideoTrackState();
+      this._iceCandidates.length = 0;
+      this._webrtcStates.iceCandidates = [];
+
+      for (const name in this._webrtcDataChannels) {
+        try {
+          this._webrtcDataChannels[name]?.close?.();
+        } catch (_) {}
+      }
+      this._webrtcDataChannels = {};
 
       for (const name in this._webrtcChannelProcessors) {
         this._webrtcChannelProcessors[name].destroy();
@@ -327,7 +344,8 @@ class webRTCClient {
 
       this._webrtcChannelProcessors = {};
 
-      this._inputDriver.stop();
+      this._inputDriver?.stop();
+      this._inputDriver = undefined;
     }
   }
 
