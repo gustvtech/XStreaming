@@ -226,6 +226,7 @@ export function NativeStreamScreenBase({
     React.useState(false);
   const [openMicro, setOpenMicro] = React.useState(false);
   const [isInPictureInPicture, setIsInPictureInPicture] = React.useState(false);
+  const [appState, setAppState] = React.useState(AppState.currentState);
   const xHomeApiRef = React.useRef<any>(undefined);
   const xCloudApiRef = React.useRef<any>(undefined);
   const isRumbling = React.useRef(false);
@@ -754,6 +755,7 @@ export function NativeStreamScreenBase({
     appStateSubscription.current = AppState.addEventListener(
       'change',
       async state => {
+        setAppState(state);
         if (
           !portraitMode &&
           state === 'background' &&
@@ -1868,6 +1870,7 @@ export function NativeStreamScreenBase({
   React.useEffect(() => {
     if (
       connectState !== CONNECTED ||
+      appState !== 'active' ||
       !showPerformance ||
       !webrtcClient ||
       typeof webrtcClient.getStreamState !== 'function'
@@ -1898,7 +1901,7 @@ export function NativeStreamScreenBase({
         performanceInterval.current = null;
       }
     };
-  }, [connectState, showPerformance, webrtcClient]);
+  }, [appState, connectState, showPerformance, webrtcClient]);
 
   const handlePowerOff = React.useCallback(async () => {
     const webApi = new WebApi(webToken);
