@@ -223,7 +223,7 @@ class webRTCClient {
         'connectionstatechange:',
         this._webrtcClient?.connectionState,
       );
-      this._connectedHandler(this._webrtcClient?.connectionState);
+      this._connectedHandler?.(this._webrtcClient?.connectionState);
     });
 
     // this._webrtcClient.addEventListener('iceconnectionstatechange', _ => {
@@ -346,6 +346,13 @@ class webRTCClient {
 
       this._inputDriver?.stop();
       this._inputDriver = undefined;
+      this._trackHandler = undefined;
+      this._trackAddHandler = undefined;
+      this._connectedHandler = undefined;
+      this._sdpHandler = undefined;
+      this._rumbleHandler = undefined;
+      this._systemUiHandler = undefined;
+      this._messageHandler = undefined;
     }
   }
 
@@ -384,7 +391,7 @@ class webRTCClient {
   _sdpHandler: any;
   sdpNegotiationChat() {
     this.createOffer().then(offer => {
-      this._sdpHandler(this, offer);
+      this._sdpHandler?.(this, offer);
     });
   }
 
