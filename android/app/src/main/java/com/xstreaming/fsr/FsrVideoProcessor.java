@@ -58,6 +58,7 @@ public class FsrVideoProcessor implements VideoProcessor {
     private boolean mobileHasSharpness;
     private boolean mobileHasHdrToneMap;
     private boolean twoPassFailureLogged;
+    private long lastGlErrorLogTimestamp;
 
     private boolean fsrEnabled = true;
     private boolean hdrInputEnabled;
@@ -603,7 +604,11 @@ public class FsrVideoProcessor implements VideoProcessor {
             GlUtil.checkGlError();
             return true;
         } catch (GlException e) {
-            Log.e(TAG, message, e);
+            long now = System.currentTimeMillis();
+            if (now - lastGlErrorLogTimestamp >= 5000L) {
+                lastGlErrorLogTimestamp = now;
+                Log.e(TAG, message, e);
+            }
             return false;
         }
     }

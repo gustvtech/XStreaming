@@ -1880,7 +1880,21 @@ export function NativeStreamScreenBase({
       webrtcClient
         .getStreamState()
         .then(res => {
-          setPerformance(res);
+          setPerformance(previous => {
+            if (
+              previous.resolution === res.resolution &&
+              previous.rtt === res.rtt &&
+              previous.jit === res.jit &&
+              previous.fps === res.fps &&
+              previous.pl === res.pl &&
+              previous.fl === res.fl &&
+              previous.br === res.br &&
+              previous.decode === res.decode
+            ) {
+              return previous;
+            }
+            return res;
+          });
         })
         .catch(() => {});
     };
@@ -2572,11 +2586,13 @@ export function NativeStreamScreenBase({
             autoDisableFsrOnLowMemory={true}
             fsrSharpness={fsrSharpness}
           />
-          <NativeTouchOverlay
-            enabled={!!settings.native_touch && !isInPictureInPicture}
-            videoFormat={video_format || ''}
-            onPointerInput={handleNativePointerInput}
-          />
+          {settings.native_touch && !isInPictureInPicture ? (
+            <NativeTouchOverlay
+              enabled
+              videoFormat={video_format || ''}
+              onPointerInput={handleNativePointerInput}
+            />
+          ) : null}
         </View>
       );
     }
