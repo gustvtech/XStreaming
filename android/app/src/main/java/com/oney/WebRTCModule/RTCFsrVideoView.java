@@ -54,6 +54,11 @@ public class RTCFsrVideoView extends ViewGroup {
     private boolean mirror;
     private boolean rendererAttached;
     private boolean rendererCleanupInProgress;
+    private boolean hasAppliedLayout;
+    private int appliedLayoutLeft;
+    private int appliedLayoutTop;
+    private int appliedLayoutRight;
+    private int appliedLayoutBottom;
     private ScalingType scalingType;
     private int videoFormatMode = VIDEO_FORMAT_MODE_AUTO;
     private float videoFormatAspectRatio;
@@ -237,6 +242,18 @@ public class RTCFsrVideoView extends ViewGroup {
             }
         }
 
+        if (hasAppliedLayout
+                && appliedLayoutLeft == l
+                && appliedLayoutTop == t
+                && appliedLayoutRight == r
+                && appliedLayoutBottom == b) {
+            return;
+        }
+        appliedLayoutLeft = l;
+        appliedLayoutTop = t;
+        appliedLayoutRight = r;
+        appliedLayoutBottom = b;
+        hasAppliedLayout = true;
         surfaceViewRenderer.layout(l, t, r, b);
         applyRendererLayoutAspectRatio(r - l, b - t);
     }
@@ -269,6 +286,7 @@ public class RTCFsrVideoView extends ViewGroup {
                         frameRotation = 0;
                         frameWidth = 0;
                     }
+                    hasAppliedLayout = false;
                     requestSurfaceViewRendererLayout();
                     if (videoTrack != null && ViewCompat.isAttachedToWindow(this)) {
                         tryAddRendererToVideoTrack();
