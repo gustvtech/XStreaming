@@ -242,6 +242,7 @@ export function NativeStreamScreenBase({
   const audioGainRef = React.useRef(1);
   const keepaliveInterval = React.useRef<any>(null);
   const performanceInterval = React.useRef<any>(null);
+  const performanceRequestInFlight = React.useRef(false);
   const connectStateRef = React.useRef<any>('');
 
   const gpDownEventListener = React.useRef<any>(undefined);
@@ -1877,6 +1878,10 @@ export function NativeStreamScreenBase({
     }
 
     const updatePerformance = () => {
+      if (performanceRequestInFlight.current) {
+        return;
+      }
+      performanceRequestInFlight.current = true;
       webrtcClient
         .getStreamState()
         .then(res => {
@@ -1896,7 +1901,10 @@ export function NativeStreamScreenBase({
             return res;
           });
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => {
+          performanceRequestInFlight.current = false;
+        });
     };
 
     updatePerformance();
